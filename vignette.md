@@ -7,6 +7,7 @@ Victoria Seng
     needed)](#required-packages-will-update-if-additional-are-needed)
 -   [Functions](#functions)
 -   [Exploratory Data Analysis (EDA)](#exploratory-data-analysis-eda)
+-   [Wrap Up](#wrap-up)
 
 # Required Packages (will update if additional are needed)
 
@@ -32,7 +33,7 @@ str(resp) #shows that the data is in content as a raw vector like in hw4
     ##  $ url        : chr "https://api.covid19api.com/countries"
     ##  $ status_code: int 200
     ##  $ headers    :List of 22
-    ##   ..$ date                            : chr "Wed, 22 Sep 2021 01:08:54 GMT"
+    ##   ..$ date                            : chr "Wed, 22 Sep 2021 01:35:02 GMT"
     ##   ..$ content-type                    : chr "application/json"
     ##   ..$ transfer-encoding               : chr "chunked"
     ##   ..$ connection                      : chr "keep-alive"
@@ -51,8 +52,8 @@ str(resp) #shows that the data is in content as a raw vector like in hw4
     ##   ..$ x-frame-options                 : chr "DENY"
     ##   ..$ x-ratelimit-limit               : chr "10"
     ##   ..$ x-ratelimit-remaining           : chr "9"
-    ##   ..$ x-ratelimit-reset               : chr "1632272939"
-    ##   ..$ x-request-id                    : chr "15cd2c361f1bcf7823e1874ef0fc58dc"
+    ##   ..$ x-ratelimit-reset               : chr "1632274507"
+    ##   ..$ x-request-id                    : chr "ac06293f01c2cf1f9ce8965de11a27bc"
     ##   ..$ x-xss-protection                : chr "1; mode=block"
     ##   ..- attr(*, "class")= chr [1:2] "insensitive" "list"
     ##  $ all_headers:List of 1
@@ -60,7 +61,7 @@ str(resp) #shows that the data is in content as a raw vector like in hw4
     ##   .. ..$ status : int 200
     ##   .. ..$ version: chr "HTTP/1.1"
     ##   .. ..$ headers:List of 22
-    ##   .. .. ..$ date                            : chr "Wed, 22 Sep 2021 01:08:54 GMT"
+    ##   .. .. ..$ date                            : chr "Wed, 22 Sep 2021 01:35:02 GMT"
     ##   .. .. ..$ content-type                    : chr "application/json"
     ##   .. .. ..$ transfer-encoding               : chr "chunked"
     ##   .. .. ..$ connection                      : chr "keep-alive"
@@ -79,8 +80,8 @@ str(resp) #shows that the data is in content as a raw vector like in hw4
     ##   .. .. ..$ x-frame-options                 : chr "DENY"
     ##   .. .. ..$ x-ratelimit-limit               : chr "10"
     ##   .. .. ..$ x-ratelimit-remaining           : chr "9"
-    ##   .. .. ..$ x-ratelimit-reset               : chr "1632272939"
-    ##   .. .. ..$ x-request-id                    : chr "15cd2c361f1bcf7823e1874ef0fc58dc"
+    ##   .. .. ..$ x-ratelimit-reset               : chr "1632274507"
+    ##   .. .. ..$ x-request-id                    : chr "ac06293f01c2cf1f9ce8965de11a27bc"
     ##   .. .. ..$ x-xss-protection                : chr "1; mode=block"
     ##   .. .. ..- attr(*, "class")= chr [1:2] "insensitive" "list"
     ##  $ cookies    :'data.frame': 0 obs. of  7 variables:
@@ -92,8 +93,8 @@ str(resp) #shows that the data is in content as a raw vector like in hw4
     ##   ..$ name      : logi(0) 
     ##   ..$ value     : logi(0) 
     ##  $ content    : raw [1:24258] 5b 0a 20 20 ...
-    ##  $ date       : POSIXct[1:1], format: "2021-09-22 01:08:54"
-    ##  $ times      : Named num [1:6] 0 0.0388 0.151 0.372 0.4787 ...
+    ##  $ date       : POSIXct[1:1], format: "2021-09-22 01:35:02"
+    ##  $ times      : Named num [1:6] 0 0.101 0.214 0.425 0.535 ...
     ##   ..- attr(*, "names")= chr [1:6] "redirect" "namelookup" "connect" "pretransfer" ...
     ##  $ request    :List of 7
     ##   ..$ method    : chr "GET"
@@ -130,4 +131,26 @@ head(resPretty, 10)
     ##  9 Australia                     australia                   AU   
     ## 10 Holy See (Vatican City State) holy-see-vatican-city-state VA
 
+To do:
+
+-   Decide which api endpoints to support
+-   Countries (will be necessary anyway as a lookup for function args)
+-   Summary
+-   Day One Live
+-   By Country Live
+-   Live by Country and Status
+-   Live by Country All Status
+-   Live by Country And Status After Date
+-   Will need to allow for country name, slug, or abbrev to work in args
+    (maybe try to find partial matches too?)
+-   Will need to allow for various date and datetime formats to work as
+    arguments
+-   Decide if I want to do a function per endpoint or have the endpoints
+    passed to the function as arguments and have logic inside the
+    function.
+-   Looking at the examples, I think I’ll try 1+ functions per endpoint
+    and a wrapper function around them.
+
 # Exploratory Data Analysis (EDA)
+
+# Wrap Up

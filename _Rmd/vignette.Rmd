@@ -29,5 +29,22 @@ resPretty <- as_tibble(fromJSON(rawToChar(resp$content)))
 head(resPretty, 10)
 ```
 
+To do: 
+
+*  Decide which api endpoints to support
+  *  Countries (will be necessary anyway as a lookup for function args)
+  *  Summary
+  *  Day One Live
+  *  By Country Live
+  *  Live by Country and Status
+  *  Live by Country All Status
+  *  Live by Country And Status After Date
+*  Will need to allow for country name, slug, or abbrev to work in args (maybe try to find partial matches too?)
+*  Will need to allow for various date and datetime formats to work as arguments
+*  Decide if I want to do a function per endpoint or have the endpoints passed to the function as arguments and have logic inside the function. 
+  *  Looking at the examples, I think I'll try 1+ functions per endpoint and a wrapper function around them.
+
+
 # Exploratory Data Analysis (EDA)
 
+# Wrap Up
