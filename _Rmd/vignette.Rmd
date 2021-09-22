@@ -1,0 +1,33 @@
+---
+title: "covid19api_vignette"
+author: "Victoria Seng"
+date: "9/21/2021"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Required Packages (will update if additional are needed)
+*  `tidyverse`
+*  `httr`
+*  `jsonlite`
+
+# Functions
+
+right now, this is just the spot where I'm testing out calling the api. Will replace this with a function later.
+
+```{r testCall, echo = TRUE}
+library(tidyverse)
+library(httr)
+library(jsonlite)
+
+resp <- GET("https://api.covid19api.com/countries")
+str(resp) #shows that the data is in content as a raw vector like in hw4
+
+resPretty <- as_tibble(fromJSON(rawToChar(resp$content)))
+head(resPretty, 10)
+```
+
+# Exploratory Data Analysis (EDA)
+
