@@ -5,7 +5,7 @@ date: "9/21/2021"
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = TRUE, message = FALSE)
 ```
 
 # Required Packages (will update if additional are needed)
@@ -14,31 +14,106 @@ knitr::opts_chunk$set(echo = TRUE)
 *  `jsonlite`
 
 # Functions
+*  `getSummary()`
+*  `getCountries()`
+*  `returnSlug()`
+*  `getDayOneLive()`
 
-right now, this is just the spot where I'm testing out calling the api. Will replace this with a function later.
-
-```{r testCall, echo = TRUE}
+```{r libs, echo = FALSE, message = FALSE, results = "hide"}
 library(tidyverse)
 library(httr)
 library(jsonlite)
-
-resp <- GET("https://api.covid19api.com/countries")
-str(resp) #shows that the data is in content as a raw vector like in hw4
-
-resPretty <- as_tibble(fromJSON(rawToChar(resp$content)))
-head(resPretty, 10)
 ```
 
-To do: 
+## `getSummary()`
 
-*  Decide which api endpoints to support
-  *  Countries (will be necessary anyway as a lookup for function args)
-  *  Summary
-  *  Day One Live
-  *  By Country Live
-  *  Live by Country and Status
-  *  Live by Country All Status
-  *  Live by Country And Status After Date
+Grabs the daily summary, which shows total and new cases by country and case type
+
+```{r define_getSummary}
+
+getSummary <- function(){
+  resp <- GET("https://api.covid19api.com/summary")
+  summary <- as_tibble(fromJSON(rawToChar(resp$content)))
+  return(summary)
+}
+
+```
+
+## `getCountries()`
+
+Grabs all country names, slugs, and abbreviations. It is used inside all other functions where the user inputs `country` as an argument.
+
+```{r define_getCountries}
+
+getCountries <- function(){
+  resp <- GET("https://api.covid19api.com/countries")
+  countries <- as_tibble(fromJSON(rawToChar(resp$content)))
+  return(countries)
+}
+
+```
+
+## `returnSlug()`
+
+Takes a quoted string and returns the country slug (if available) as a character string. Argument can be the name of the country, the slug, or the ISO2 abbreviation. Throws a specific error if no match is found.
+
+TO DO: I might try to make this not case sensitive in the future
+
+```{r returnSlug}
+returnSlug <- function(cntry){
+  countries <- getCountries() ## grab all the countries as a tibble
+  
+  slug <- countries %>%
+    filter(
+        case_when(
+          cntry %in% Country ~ cntry == Country,
+          cntry %in% ISO2    ~ cntry == ISO2,
+          cntry %in% Slug    ~ cntry == Slug
+      ) ## figure out which column the argument is referencing, then filter to the correct row 
+    ) %>% 
+      select(Slug) ## grab the slug
+  
+  if(nrow(slug) == 0) stop(
+    paste0(
+      cntry, " is not a country name, slug, or ISO2 valus supported by the api"
+    ) ## if there is no match, the resulting tibble will have 0 rows. Throw an error if this happens
+  )
+  
+  return(unname(unlist(slug))) ## turn the slug into a character string and return it
+}
+
+```
+
+## `getDayOneLive()`
+
+This endpoint returns all cases of the specified case type for the specified country from its first recorded case to present (updated every 10 minutes.)
+
+Its arguments are `country` and `caseType`.
+
+TO DO: figure out if there is an all option to this endpoint. If there is, I'll need to have these be unnamed args and add logic to accommodate.
+
+```{r define_getDayOneLive}
+getDayOneLive <- function(cntry, caseType){
+  params <- vector()
+  
+  params[1] <- returnSlug(cntry)
+  params[2] <- caseType
+  
+  resp <- GET(
+    paste0(
+      "https://api.covid19api.com/dayone/country/",params[1],"/status/",params[2],"/live"
+    )
+  )
+  dayOneLive <- as_tibble(fromJSON(rawToChar(resp$content)))
+  return(dayOneLive)
+}
+```
+
+
+*  By Country Live params = country, case type, from
+*  Live by Country and Status params = country, case type, from
+*  Live by Country All Status
+*  Live by Country And Status After Date
 *  Will need to allow for country name, slug, or abbrev to work in args (maybe try to find partial matches too?)
 *  Will need to allow for various date and datetime formats to work as arguments
 *  Decide if I want to do a function per endpoint or have the endpoints passed to the function as arguments and have logic inside the function. 
