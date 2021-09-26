@@ -9,6 +9,9 @@ Victoria Seng
     -   [`getSummary()`](#getsummary)
     -   [`getCountries()`](#getcountries)
     -   [`returnSlug()`](#returnslug)
+    -   [`handleTZ()`](#handletz)
+    -   [`handleDT()`](#handledt)
+    -   [`handleDates()`](#handledates)
     -   [`getDayOneLive()`](#getdayonelive)
 -   [Exploratory Data Analysis (EDA)](#exploratory-data-analysis-eda)
 -   [Wrap Up](#wrap-up)
@@ -18,12 +21,17 @@ Victoria Seng
 -   `tidyverse`
 -   `httr`
 -   `jsonlite`
+-   `stringr`
+-   `lubridate`
 
 # Functions
 
 -   `getSummary()`
 -   `getCountries()`
 -   `returnSlug()`
+-   `handleTZ()`
+-   `handleDT()`
+-   `handleDates()`
 -   `getDayOneLive()`
 
 ## `getSummary()`
@@ -76,13 +84,93 @@ returnSlug <- function(cntry){
   
   if(nrow(slug) == 0) stop(
     paste0(
-      cntry, " is not a country name, slug, or ISO2 valus supported by the api"
+      cntry, " is not a country name, slug, or ISO2 value supported by the api"
     ) ## if there is no match, the resulting tibble will have 0 rows. Throw an error if this happens
   )
   
   return(unname(unlist(slug))) ## turn the slug into a character string and return it
 }
 ```
+
+## `handleTZ()`
+
+This function takes a character string and tries to find a match in
+`OlsonNames()`. If an exact match cannot be found, a partial match is
+searched for. If one is found, it is used, but a warning is thrown. If
+that cannot be found, the function returns a TZ of “UTC” and throws a
+warning.
+
+``` r
+handleTZ <- function(z = "UTC"){
+  #handle the time zone
+  olson <- OlsonNames()
+  zone <- if(z %in% olson) {z} else {NULL} # if the zone is an exact match, use it
+  
+  found <- if(is.null(zone)) {
+    unlist(
+      lapply(
+        olson, function(x){
+          if(grepl(z, x)) {x} else {NULL}
+        }
+      )
+    )
+  } # if not, search for a matching string within olson.
+  
+  if(is_null(zone) & (length(found) > 1 | is_null(found))) {
+    zone <- "UTC"
+    warning(
+      paste0(z, " is not a recognized time zone. Defaulting to UTC.")
+    ) # If no match or too many matches are found, just use UTC. But warn the user.
+  } else if(is_null(zone) & length(found) == 1) {
+    zone <- found
+    warning(
+      paste0(z, " is not a recognized time zone. Using closest match, ", found, ".")
+    ) # if a single match is found, use it. But warn the user.
+  }
+  return(zone)
+}
+```
+
+## `handleDT()`
+
+``` r
+handleDT <- function(date, z){
+  zone <- if(!is_null(z)){handleTZ(z)} else {"UTC"} # handle the time zone
+  dt <- str_replace_all(date, "/", "-") #preliminary data cleaning
+  
+  cleanDT <- if(
+    str_detect(
+      dt, "^[:digit:]{4}-[:digit:]{2}-[:digit:]{2}([:space:]|T)[:digit:]{2}:[:digit:]{2}:[:digit:]{2}"
+    )
+  ) {ymd_hms(dt, tz = zone)} else if(
+    str_detect(
+      dt, "^[:digit:]{4}-[:digit:]{2}-[:digit:]{2}([:space:]|T)[:digit:]{2}:[:digit:]{2}"
+    )
+  ) {ymd_hm(dt, tz = zone)} else if(
+    str_detect(
+      dt, "^[:digit:]{4}-[:digit:]{2}-[:digit:]{2}([:space:]|T)[:digit:]{2}"
+    )
+  ) {ymd_h(dt, tz = zone)} else if(
+    str_detect(
+      dt, "^[:digit:]{4}-[:digit:]{2}-[:digit:]{2}"
+    )
+  ) {ymd(dt, tz = zone)} else {stop(paste0("Could not parse ", date, " into a datetime object."))}
+  
+  cleanUTC <- if(zone != "UTC") {with_tz(cleanDT, "UTC")} else {cleanDT} # translate to UTC if needed
+  return(cleanUTC)
+}
+```
+
+## `handleDates()`
+
+Takes a vector of date/datetime strings and standardizes their format to
+`yyyy-mm-ddThh:mm:ssZ`
+
+TO DO: I think its fine to ask a user to input dates as yyyy/mm/dd and
+datetimes as yyyy/mm/ddThh:mm:ss. I’d also like them to be able to
+specify their time zone and translate that into UTC for them. So this
+function should accept a date OR a datetime and if it is not in UTC,
+convert it to UTC.
 
 ## `getDayOneLive()`
 
@@ -98,14 +186,9 @@ accommodate.
 
 ``` r
 getDayOneLive <- function(cntry, caseType){
-  params <- vector()
-  
-  params[1] <- returnSlug(cntry)
-  params[2] <- caseType
-  
   resp <- GET(
     paste0(
-      "https://api.covid19api.com/dayone/country/",params[1],"/status/",params[2],"/live"
+      "https://api.covid19api.com/dayone/country/",returnSlug(cntry),"/status/",caseType,"/live"
     )
   )
   dayOneLive <- as_tibble(fromJSON(rawToChar(resp$content)))
