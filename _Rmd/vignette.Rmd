@@ -21,7 +21,6 @@ knitr::opts_chunk$set(echo = TRUE, message = FALSE)
 *  `returnSlug()`
 *  `handleTZ()`
 *  `handleDT()`
-*  `handleDates()`
 *  `getDayOneLive()`
 
 ```{r libs, echo = FALSE, message = FALSE, results = "hide"}
@@ -64,8 +63,6 @@ getCountries <- function(){
 
 Takes a quoted string and returns the country slug (if available) as a character string. Argument can be the name of the country, the slug, or the ISO2 abbreviation. Throws a specific error if no match is found.
 
-TO DO: I might try to make this not case sensitive in the future
-
 ```{r returnSlug}
 returnSlug <- function(cntry){
   countries <- getCountries() ## grab all the countries as a tibble
@@ -101,7 +98,7 @@ handleTZ <- function(z = "UTC"){
   olson <- OlsonNames()
   zone <- if(z %in% olson) {z} else {NULL} # if the zone is an exact match, use it
   
-  found <- if(is.null(zone)) {
+  found <- if(is_null(zone)) {
     unlist(
       lapply(
         olson, function(x){
@@ -152,18 +149,12 @@ handleDT <- function(date, z){
     )
   ) {ymd(dt, tz = zone)} else {stop(paste0("Could not parse ", date, " into a datetime object."))}
   
-  cleanUTC <- if(zone != "UTC") {with_tz(cleanDT, "UTC")} else {cleanDT} # translate to UTC if needed
-  return(cleanUTC)
+  cleanUTC <- toString(if(zone != "UTC") {with_tz(cleanDT, "UTC")} else {cleanDT}) # translate to UTC if needed
+  dtStr <- paste0(substr(cleanUTC,1,10),"T", substr(cleanUTC,12,19),"Z")
+  return(dtStr)
 }
 
 ```
-
-## `handleDates()`
-
-Takes a vector of date/datetime strings and standardizes their format to `yyyy-mm-ddThh:mm:ssZ`
-
-TO DO: I think its fine to ask a user to input dates as yyyy/mm/dd and datetimes as yyyy/mm/ddThh:mm:ss. I'd also like them to be able to specify their time zone and translate that into UTC for them. So this function should accept a date OR a datetime and if it is not in UTC, convert it to UTC.
-
 
 ## `getDayOneLive()`
 
@@ -174,28 +165,106 @@ Its arguments are `country` and `caseType`.
 TO DO: figure out if there is an all option to this endpoint. If there is, I'll need to have these be unnamed args and add logic to accommodate.
 
 ```{r define_getDayOneLive}
-getDayOneLive <- function(cntry, caseType){
+getDayOneLive <- function(country, caseType){
   resp <- GET(
     paste0(
-      "https://api.covid19api.com/dayone/country/",returnSlug(cntry),"/status/",caseType,"/live"
+      "https://api.covid19api.com/dayone/country/",returnSlug(country),"/status/",caseType,"/live"
     )
   )
-  dayOneLive <- as_tibble(fromJSON(rawToChar(resp$content)))
-  return(dayOneLive)
+  df <- as_tibble(fromJSON(rawToChar(resp$content)))
+  return(df)
 }
 ```
 
+## `getByCountryLive()`
 
-*  By Country Live params = country, case type, from
-*  Live by Country and Status params = country, case type, from
-*  Live by Country All Status
-*  Live by Country And Status After Date
-*  Will need to allow for country name, slug, or abbrev to work in args (maybe try to find partial matches too?)
-*  Will need to allow for various date and datetime formats to work as arguments
-*  Decide if I want to do a function per endpoint or have the endpoints passed to the function as arguments and have logic inside the function. 
-  *  Looking at the examples, I think I'll try 1+ functions per endpoint and a wrapper function around them.
+Takes a country, from datetime string, and optionally a to and time zone string
 
+```{r define_getCountryLive}
+getCountryLive <- function(country, from, to = NULL, z = NULL){
+  params <- paste0(
+    returnSlug(country),"/status/confirmed/live?from=",handleDT(from, z)
+  )
+  if(!is_null(to)){params <- paste0(params, "&to=", handleDT(to, z))}
+  
+  resp <- GET(
+    paste0(
+      "https://api.covid19api.com/country/", params
+    )
+  )
+  df <- as_tibble(fromJSON(rawToChar(resp$content)))
+  return(df)
+}
+
+```
+
+## `getLiveByCountryStatus()`
+
+takes country, case type
+
+```{r define_getLiveByCountryStatus}
+getLiveByCountryStatus <- function(country, caseType){
+  params <- paste0(
+    returnSlug(country),"/status/",caseType)
+  
+  resp <- GET(
+    paste0(
+      "https://api.covid19api.com/country/", params
+    )
+  )
+  df <- as_tibble(fromJSON(rawToChar(resp$content)))
+  return(df)
+}
+
+```
+
+## `getLiveByCountryAllStatus()`
+
+takes country name
+
+```{r define_getLiveByCountryAllStatus}
+getLiveByCountryStatus <- function(country){
+  params <- paste0(
+    returnSlug(country))
+  
+  resp <- GET(
+    paste0(
+      "https://api.covid19api.com/live/country/", params
+    )
+  )
+  df <- as_tibble(fromJSON(rawToChar(resp$content)))
+  return(df)
+}
+
+```
+
+## `getLiveCsAfterDT()`
+
+```{r define_getLiveCsAfterDT}
+getLiveCsAfterDT <- function(country, from, z = NULL){
+  params <- paste0(
+    returnSlug(country),"/status/confirmed/live?from=",handleDT(from, z)
+  )
+  
+  resp <- GET(
+    paste0(
+      "https://api.covid19api.com/country/", params
+    )
+  )
+  df <- as_tibble(fromJSON(rawToChar(resp$content)))
+  return(df)
+}
+
+```
 
 # Exploratory Data Analysis (EDA)
+
+A few requirements about your EDA are below:
+*  You should pull data from at least two endpoints (possibly combining them into one)
+*  You should create at least two new variables that are functions of the variables from a data set you use
+*  You should create some contingency tables
+*  You should create numerical summaries for some quantitative variables at each setting of some of your categorical variables
+*  You should create at least five plots utilizing coloring, grouping, etc. All plots should have nice labels and titles.
+∗  You should have at least one bar plot, one histogram, one box plot, and one scatter plot
 
 # Wrap Up
