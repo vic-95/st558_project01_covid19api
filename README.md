@@ -3,8 +3,7 @@ README
 Victoria Seng
 9/21/2021
 
--   [Required Packages (will update if additional are
-    needed)](#required-packages-will-update-if-additional-are-needed)
+-   [Required Packages](#required-packages)
 -   [Functions](#functions)
     -   [`getSummaryGlobal()`](#getsummaryglobal)
     -   [`getSummaryCountries()`](#getsummarycountries)
@@ -19,7 +18,7 @@ Victoria Seng
 -   [Exploratory Data Analysis (EDA)](#exploratory-data-analysis-eda)
 -   [Wrap Up](#wrap-up)
 
-# Required Packages (will update if additional are needed)
+# Required Packages
 
 -   `tidyverse`
 -   `httr`
@@ -43,7 +42,10 @@ Victoria Seng
 
 ## `getSummaryGlobal()`
 
-Grabs the daily summary, which shows total and new cases by case type
+Accesses the
+[Summary](https://documenter.getpostman.com/view/10808728/SzS8rjbc#00030720-fae3-4c72-8aea-ad01ba17adf8)
+endpoint, specifically the global data. Grabs the daily summary, which
+shows total and new cases by case type
 
 ``` r
 getSummaryGlobal <- function(){
@@ -56,7 +58,10 @@ getSummaryGlobal <- function(){
 
 ## `getSummaryCountries()`
 
-Grabs the daily summary by country and case type
+Accesses the
+[Summary](https://documenter.getpostman.com/view/10808728/SzS8rjbc#00030720-fae3-4c72-8aea-ad01ba17adf8)
+endpoint, specifically the by-country data. Grabs the daily summary by
+country and case type
 
 ``` r
 getSummaryCountries <- function(){
@@ -69,8 +74,11 @@ getSummaryCountries <- function(){
 
 ## `getCountries()`
 
-Grabs all country names, slugs, and abbreviations. It is used inside all
-other functions where the user inputs `country` as an argument.
+Accesses the
+[Countries](https://documenter.getpostman.com/view/10808728/SzS8rjbc#7934d316-f751-4914-9909-39f1901caeb8)
+endpoint. Grabs all country names, slugs, and abbreviations. It is used
+inside all other functions where the user inputs `country` as an
+argument.
 
 ``` r
 getCountries <- function(){
@@ -82,9 +90,10 @@ getCountries <- function(){
 
 ## `returnSlug()`
 
-Takes a quoted string and returns the country slug (if available) as a
-character string. Argument can be the name of the country, the slug, or
-the ISO2 abbreviation. Throws a specific error if no match is found.
+A helper function. Takes a quoted string and returns the country slug
+(if available) as a character string. Argument can be the name of the
+country, the slug, or the ISO2 abbreviation. Throws a specific error if
+no match is found.
 
 ``` r
 returnSlug <- function(cntry){
@@ -112,11 +121,11 @@ returnSlug <- function(cntry){
 
 ## `handleTZ()`
 
-This function takes a character string and tries to find a match in
-`OlsonNames()`. If an exact match cannot be found, a partial match is
-searched for. If one is found, it is used, but a warning is thrown. If
-that cannot be found, the function returns a TZ of “UTC” and throws a
-warning.
+A helper function. This function takes a character string and tries to
+find a match in `OlsonNames()`. If an exact match cannot be found, a
+partial match is searched for. If one is found, it is used, but a
+warning is thrown. If that cannot be found, the function returns a TZ of
+“UTC” and throws a warning.
 
 ``` r
 handleTZ <- function(z = "UTC"){
@@ -151,7 +160,8 @@ handleTZ <- function(z = "UTC"){
 
 ## `handleDT()`
 
-this takes a date string and gives it back in the correct format
+A helper function. This takes a date string and gives it back in the
+correct format
 
 ``` r
 handleDT <- function(date, z){
@@ -184,9 +194,11 @@ handleDT <- function(date, z){
 
 ## `getDayOneLive()`
 
-This endpoint returns all cases of the specified case type for the
-specified country from its first recorded case to present (updated every
-10 minutes.)
+Accesses the [Get Day One
+Live](https://documenter.getpostman.com/view/10808728/SzS8rjbc#81447902-b68a-4e79-9df9-1b371905e9fa)
+endpoint. This endpoint returns all cases of the specified case type for
+the specified country from its first recorded case to present (updated
+every 10 minutes.)
 
 Its arguments are `country` and `caseType`.
 
@@ -204,8 +216,10 @@ getDayOneLive <- function(country, caseType){
 
 ## `getCountryLive()`
 
-Takes a country, from datetime string, and optionally a to and time zone
-string and returns cases by date
+Accesses the [By Country
+Live](https://documenter.getpostman.com/view/10808728/SzS8rjbc#c34162be-7c20-418e-9866-a24dca632b3c)
+endpoint. Takes a country, from datetime string, and optionally a to and
+time zone string and returns cases by date
 
 ``` r
 getCountryLive <- function(country, from, to = NULL, z = NULL){
@@ -226,7 +240,9 @@ getCountryLive <- function(country, from, to = NULL, z = NULL){
 
 ## `getLiveCS()`
 
-takes country, case type and returns cases by date
+Accesses the [Live By Country and
+Status](https://documenter.getpostman.com/view/10808728/SzS8rjbc#63fda84a-6b43-4506-9cc7-2172561d5c16)
+endpoint. Takes country, case type and returns cases by date
 
 ``` r
 getLiveCS <- function(country, caseType){
@@ -245,7 +261,10 @@ getLiveCS <- function(country, caseType){
 
 ## `getLiveCAS()`
 
-takes country name and returns live cases for all casetypes by date
+Accesses the [Live by Country All
+Status](https://documenter.getpostman.com/view/10808728/SzS8rjbc#c4b075a4-83b2-4a98-9db9-b3be51fa6bef)
+endpoint. Takes country name and returns live cases for all casetypes by
+date.
 
 ``` r
 getLiveCAS <- function(country){
@@ -267,8 +286,8 @@ getLiveCAS <- function(country){
 First, we’ll pull the summary stats by country and look at total
 confirmed cases vs total deaths as a scatter plot. Here, we see what
 we’d expect, that more cases usually means more deaths. There are three
-particularly large country datapoints here, and we can assume that these
-are larger population countries.
+particularly large country data points here, and we can assume that
+these are larger population countries.
 
 ``` r
 summary <- getSummaryCountries()
@@ -286,8 +305,8 @@ df + geom_point(aes(x = TotalConfirmed, y = TotalDeaths)) +
 
 I’d like to look at a contingency table of confirmed versus deaths for
 these countries. To do this, I’m dividing the case numbers into buckets.
-The biggest The largest group of countries in the contingency table have
-between 100K and 1M cases, but fewer than 10K deaths.
+The largest group of countries in the contingency table have between
+100K and 1M cases, but fewer than 10K deaths.
 
 ``` r
 factorLvls <- c("0-1,000", "1,000-9,999", "10,000-99,999", "100,000-999,999", "1,000,000-9,999,999", "Over 10,000,000")
@@ -342,10 +361,10 @@ rows <- nrow(ccWithBrackets)
 
 df <- ggplot(data = ccWithBrackets %>% slice_min(TotalConfirmed, n = (rows-3)))
 
-df + geom_histogram(aes(x = TotalConfirmed), bins = 20) +
+df + geom_histogram(aes(x = TotalConfirmed, fill = TotalConfirmed), bins = 20) +
   theme(axis.text.x = element_text(angle = 270)) +
     scale_x_continuous(labels = scales::comma) +
-      labs(title = "Histogram of Confirmed Cases by COuntry", x = "Case Buckets")
+      labs(title = "Histogram of Confirmed Cases by Country", x = "Case Buckets")
 ```
 
 ![](./images/eda_histogram-1.png)<!-- -->
@@ -363,7 +382,7 @@ summPivot <- summary %>%
       filter(Type %in% c("TotalConfirmed", "TotalDeaths"))
 
 ggplot(summPivot, aes(Type, Cases)) +
-  geom_boxplot() +
+  geom_boxplot(aes(color = Type)) +
     scale_y_continuous(labels = scales::comma) +
       labs(title = "Boxplot for Cases by Type")
 ```
@@ -385,11 +404,11 @@ top3
     ## # A tibble: 3 x 2
     ##   CountryCode TotalConfirmed
     ##   <chr>                <int>
-    ## 1 US                43852255
-    ## 2 IN                33853048
-    ## 3 BR                21478546
+    ## 1 US                43947317
+    ## 2 IN                33871881
+    ## 3 BR                21499074
 
-This very crowded bar chart shows cases versus deaths for the top 3.
+This bar chart shows cases versus deaths for the top 3.
 
 ``` r
 ggplot(summPivot %>% filter(CountryCode %in% c("US", "IN", "BR")), aes(CountryCode)) +
@@ -400,11 +419,12 @@ ggplot(summPivot %>% filter(CountryCode %in% c("US", "IN", "BR")), aes(CountryCo
             scale_fill_brewer(palette = "Set2")
 ```
 
-![](./images/eda_bar_chart-1.png)<!-- --> Here, we have North Carolina
-overall and by country with summary statistics. For counties, we have a
-contingency table to show whether a county’s mean cases are over or
-under the state level. Over half are under. We can assume that a few
-counties are inflating the overall mean.
+![](./images/eda_bar_chart-1.png)<!-- -->
+
+Here, we have North Carolina overall and by country with summary
+statistics. For counties, we have a contingency table to show whether a
+county’s mean cases are over or under the state level. Over half are
+under. We can assume that a few counties are inflating the overall mean.
 
 ``` r
 nc <- unlist(getCountryLive("united-states", "2021-09-24T00:00:00", to = "2021-09-30T00:00:00", z = "UTC") %>%
@@ -450,7 +470,7 @@ cases than Virginia.
 
 ``` r
 ggplot(bothStates, aes(Province, mean)) +
-  geom_boxplot() +
+  geom_boxplot(aes(color = Province)) +
     scale_y_continuous(labels = scales::comma) +
       labs(title = "NC vs VA: Boxplot for Mean Confirmed Cases by County 9/24-9/30")
 ```
@@ -461,4 +481,7 @@ ggplot(bothStates, aes(Province, mean)) +
 
 In summary, I wrote functions to 6 endpoints of the covid19 api and
 demonstrated connecting and summarizing data from a couple of endpoints.
-We learned that population data would help this data set a lot.
+We learned that the US, India and Brazil have the most cases, but that
+without population data, we can’t really tell whether this is due to
+population or pervasiveness. Population data would help this data set a
+lot.
