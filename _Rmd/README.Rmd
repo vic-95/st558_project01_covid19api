@@ -5,7 +5,7 @@ date: "9/21/2021"
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE, message = FALSE, fig.path = "../")
+knitr::opts_chunk$set(echo = TRUE, message = FALSE)
 ```
 
 # Required Packages (will update if additional are needed)

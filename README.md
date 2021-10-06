@@ -282,7 +282,7 @@ df + geom_point(aes(x = TotalConfirmed, y = TotalDeaths)) +
         scale_y_continuous(labels = scales::comma)
 ```
 
-![](../eda_scatter_plot-1.png)<!-- -->
+![](C:/Users/vicse/Documents/ncsu/st558/st558_project01_covid19api/README_files/figure-gfm/eda_scatter_plot-1.png)<!-- -->
 
 I’d like to look at a contingency table of confirmed versus deaths for
 these countries. To do this, I’m dividing the case numbers into buckets.
@@ -348,7 +348,7 @@ df + geom_histogram(aes(x = TotalConfirmed), bins = 20) +
       labs(title = "Histogram of Confirmed Cases by COuntry", x = "Case Buckets")
 ```
 
-![](../eda_histogram-1.png)<!-- -->
+![](C:/Users/vicse/Documents/ncsu/st558/st558_project01_covid19api/README_files/figure-gfm/eda_histogram-1.png)<!-- -->
 
 Pivoting the data to be a bit easier to work with. Now let’s look at the
 summary stats for confirmed and deaths for all countries. Its difficult
@@ -368,7 +368,7 @@ ggplot(summPivot, aes(Type, Cases)) +
       labs(title = "Boxplot for Cases by Type")
 ```
 
-![](../eda_boxplot-1.png)<!-- -->
+![](C:/Users/vicse/Documents/ncsu/st558/st558_project01_covid19api/README_files/figure-gfm/eda_boxplot-1.png)<!-- -->
 
 This is just a little something to tell us who those top 3 countries
 are. The US is one of them. Let’s take this opportunity to go more
@@ -400,11 +400,11 @@ ggplot(summPivot %>% filter(CountryCode %in% c("US", "IN", "BR")), aes(CountryCo
             scale_fill_brewer(palette = "Set2")
 ```
 
-![](../eda_bar_chart-1.png)<!-- --> Here, we have North Carolina overall
-and by country with summary statistics. For counties, we have a
-contingency table to show whether a county’s mean cases are over or
-under the state level. Over half are under. We can assume that a few
-counties are inflating the overall mean.
+![](C:/Users/vicse/Documents/ncsu/st558/st558_project01_covid19api/README_files/figure-gfm/eda_bar_chart-1.png)<!-- -->
+Here, we have North Carolina overall and by country with summary
+statistics. For counties, we have a contingency table to show whether a
+county’s mean cases are over or under the state level. Over half are
+under. We can assume that a few counties are inflating the overall mean.
 
 ``` r
 nc <- unlist(getCountryLive("united-states", "2021-09-24T00:00:00", to = "2021-09-30T00:00:00", z = "UTC") %>%
@@ -455,7 +455,7 @@ ggplot(bothStates, aes(Province, mean)) +
       labs(title = "NC vs VA: Boxplot for Mean Confirmed Cases by County 9/24-9/30")
 ```
 
-![](../eda_07-1.png)<!-- -->
+![](C:/Users/vicse/Documents/ncsu/st558/st558_project01_covid19api/README_files/figure-gfm/eda_07-1.png)<!-- -->
 
 # Wrap Up
 
