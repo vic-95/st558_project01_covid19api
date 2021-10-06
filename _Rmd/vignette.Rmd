@@ -192,7 +192,7 @@ getDayOneLive <- function(country, caseType){
 }
 ```
 
-## `getByCountryLive()`
+## `getCountryLive()`
 
 Takes a country, from datetime string, and optionally a to and time zone string
 
@@ -277,14 +277,24 @@ getLiveCsAfterDT <- function(country, from, z = NULL){
 
 First, let's pull the countries summary. I'd like to split the number of confirmed cases into brackets and store it as a factor. I then want to see the number of countries in each bracket as a contingency table.
 
-```{r eda_01}
+```{r eda_scatter_plot}
 summary <- getSummaryCountries()
 
+df <- ggplot(data = summary) 
+
+df + geom_point(aes(x = TotalConfirmed, y = TotalDeaths)) +
+  labs(title = "Total Confirmed Cases v Total Deaths for Each Country", x = "Confirmed", y = "Deaths") +
+    theme(axis.text.x = element_text(angle = 270)) +
+      scale_x_continuous(labels = scales::comma) +
+        scale_y_continuous(labels = scales::comma)
+```
+
+```{r eda_conTab_01}
 factorLvls <- c("0-1,000", "1,000-9,999", "10,000-99,999", "100,000-999,999", "1,000,000-9,999,999", "Over 10,000,000")
 bracketNums <- c(1000, 10000, 100000, 1000000, 10000000)
 
 ccWithBrackets <- summary %>%
-  select(Country, TotalConfirmed, TotalDeaths) %>%
+  select(CountryCode, TotalConfirmed, TotalDeaths) %>%
     mutate(confirmed = if_else(
       TotalConfirmed < bracketNums[1], factorLvls[1], if_else(
         TotalConfirmed < bracketNums[2], factorLvls[2], if_else(
@@ -312,43 +322,91 @@ table(ccWithBrackets$confirmed, ccWithBrackets$deaths)
 
 ```
 
-Let's look at confirmed v deaths as a scatter plot.
+```{r eda_histogram}
+rows <- nrow(ccWithBrackets)
 
-```{r eda_02}
-df <- ggplot(data = ccWithBrackets) 
+df <- ggplot(data = ccWithBrackets %>% slice_min(TotalConfirmed, n = (rows-3)))
 
-df + geom_point(aes(x = TotalConfirmed, y = TotalDeaths))
+df + geom_histogram(aes(x = TotalConfirmed), bins = 20) +
+  theme(axis.text.x = element_text(angle = 270)) +
+    scale_x_continuous(labels = scales::comma) 
 ```
 
-which countries are those top 3?
-look at the top 3 more closely
+```{r eda_boxplot}
+summPivot <- summary %>%
+  pivot_longer(cols = starts_with("Total"), names_to = "Type", values_to = "Cases", values_drop_na = TRUE) %>%
+    select(CountryCode, Type, Cases) %>%
+      filter(Type %in% c("TotalConfirmed", "TotalDeaths"))
+
+ggplot(summPivot, aes(Type, Cases)) +
+  geom_boxplot() +
+    scale_y_continuous(labels = scales::comma) +
+      labs(title = "Boxplot for Cases by Type")
+
+```
+
+```{r eda_bar_chart}
+summSlice <-  summPivot %>% 
+  slice_max(Cases , n = 10)
+        
+
+ggplot(summSlice, aes(CountryCode)) +
+  geom_bar(aes(y = Cases, fill = Type), stat = "identity", position = "dodge") +
+      labs(title = "Cases by Type for 10 Largest Case Counts", x = "Country", fill = "") +
+        theme(axis.text.x = element_text(angle = 0)) +
+          scale_y_continuous(labels = scales::comma) +
+            scale_fill_brewer(palette = "Set2")
+```
+
 
 ```{r eda_03}
 top3 <- ccWithBrackets %>%
-  select(Country, TotalConfirmed) %>%
+  select(CountryCode, TotalConfirmed) %>%
     slice_max(TotalConfirmed , n = 3)
 
 top3
 ```
 
 ```{r eda_04}
-usa <- getLiveCAS("united-states") %>%
-  group_by(Date, Country) %>%
-    summarize(confirmed = sum(Confirmed), deaths = sum(Deaths), active = sum(Active)) %>%
-      arrange(Date) %>%
-        filter(ymd_hms(Date) > ymd_hms("2021-01-01T00:00:00Z"))
+usa <- getCountryLive("united-states", "2021-09-24T00:00:00", to = "2021-09-30T00:00:00", z = "UTC") %>%
+  group_by(Province) %>%
+    summarize(Cases = sum(Cases))
 
-usa_incremental <- usa %>%
-  ungroup() %>%
-      mutate(incC = (confirmed - lag(confirmed)), 
-           incD = (deaths - lag(deaths)), 
-           rollingavgActive = zoo::rollmean(active, k = 7, fill = NA))
-
+usaBuckets <- usa %>%
+  mutate(bucket = cut(Cases, breaks = seq(0, 10000000, by = 10000)))
 ```
 
-```{r eda_05}
-str(usa$confirmed)
-usa_incremental
+```{r eda_06}
+nc <- unlist(getCountryLive("united-states", "2021-09-24T00:00:00", to = "2021-09-30T00:00:00", z = "UTC") %>%
+  filter(Province == "North Carolina") %>%
+    group_by(Province) %>%
+      summarize(min = min(Cases), mean = mean(Cases), median = median(Cases), IQR = IQR(Cases), max = max(Cases))
+)
+
+ncCounties <- getCountryLive("united-states", "2021-09-24T00:00:00", to = "2021-09-30T00:00:00", z = "UTC") %>%
+  filter(Province == "North Carolina") %>%
+    group_by(Province, City) %>%
+      summarize(min = min(Cases), mean = mean(Cases), median = median(Cases), IQR = IQR(Cases), max = max(Cases)) %>%
+        mutate(bucket = if_else(mean <= as.numeric(nc["mean"]), "under", "over")) 
+
+table(ncCounties$bucket)
+```
+
+```{r eda_08}
+vaCounties <- getCountryLive("united-states", "2021-09-24T00:00:00", to = "2021-09-30T00:00:00", z = "UTC") %>%
+  filter(Province == "Virginia") %>%
+    group_by(Province, City) %>%
+      summarize(min = min(Cases), mean = mean(Cases), median = median(Cases), IQR = IQR(Cases), max = max(Cases))
+
+bothStates <- rbind(ncCounties, vaCounties)
+```
+
+```{r eda_07}
+
+ggplot(bothStates, aes(Province, mean)) +
+  geom_boxplot() +
+    scale_y_continuous(labels = scales::comma) +
+      labs(title = "NC vs VA: Boxplot for Mean Confirmed Cases by County 9/24-9/30")
 ```
 
 A few requirements about your EDA are below:
@@ -357,6 +415,6 @@ A few requirements about your EDA are below:
 *  You should create some contingency tables
 *  You should create numerical summaries for some quantitative variables at each setting of some of your categorical variables
 *  You should create at least five plots utilizing coloring, grouping, etc. All plots should have nice labels and titles.
-∗  You should have at least one bar plot, one histogram, one box plot, and one scatter plot
+∗  You should have at least one bar plot(done), one histogram (done), one box plot(done), and one scatter plot(done)
 
 # Wrap Up
