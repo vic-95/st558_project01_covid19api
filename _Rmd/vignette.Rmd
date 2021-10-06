@@ -402,3 +402,5 @@ ggplot(bothStates, aes(Province, mean)) +
 ```
 
 # Wrap Up
+
+In summary, I wrote functions to 6 endpoints of the covid19 api and demonstrated connecting and summarizing data from a couple of endpoints. We learned that population data would help this data set a lot.
